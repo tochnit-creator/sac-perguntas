@@ -175,7 +175,7 @@
 
   <div class="grid">
     <div class="panel">
-      <h2>Chamados por categoria <span>— o que mais gera dúvida</span></h2>
+      <h2>Chamados por assunto <span>— o que mais gera dúvida</span></h2>
       <canvas id="chart-categoria"></canvas>
     </div>
     <div class="panel">
@@ -186,7 +186,7 @@
   </div>
 
   <div class="panel" style="margin-bottom:8px;">
-    <h2>Clientes de atenção <span>— 3 ou mais chamados (identidade anonimizada)</span></h2>
+    <h2>Clientes de atenção <span>— 3 ou mais chamados</span></h2>
     <table>
       <thead><tr><th>Cliente</th><th>Chamados</th><th style="width:40%;">Frequência relativa</th></tr></thead>
       <tbody id="tabela-reincidentes"></tbody>
@@ -201,7 +201,7 @@
         </div>
         <button onclick="conectar()">Conectar planilha real</button>
       </div>
-      <div class="connect-msg">Fonte: planilha publicada na Web (Arquivo &gt; Compartilhar &gt; Publicar na Web &gt; CSV). Os dados são lidos e agregados aqui no navegador — telefone/CPF nunca aparece na tela, só a contagem por cliente, identificado como "Cliente 1", "Cliente 2" etc.</div>
+      <div class="connect-msg">Fonte: planilha publicada na Web (Arquivo &gt; Compartilhar &gt; Publicar na Web &gt; CSV). Os dados são lidos e agregados aqui no navegador. A reincidência é contada por "Nome do cliente" (e usa "Nome" como reserva se esse campo estiver vazio).</div>
     </details>
   </div>
 
@@ -215,15 +215,16 @@ const DADOS_EXEMPLO = {
   porStatus: { "Aberto": 9, "Em andamento": 6, "Resolvido": 27 },
   porCategoria: { "Dúvida sobre produto": 18, "Cor/variação divergente": 9, "Prazo de entrega": 7, "Troca/devolução": 5, "Outros": 3 },
   reincidentes: [
-    { contato: "Cliente 1", qtd: 6 },
-    { contato: "Cliente 2", qtd: 4 },
-    { contato: "Cliente 3", qtd: 3 }
+    { contato: "Maria Oliveira", qtd: 6 },
+    { contato: "João Souza", qtd: 4 },
+    { contato: "Ana Costa", qtd: 3 }
   ],
   tempoMedioResolucaoHoras: 14.5
 };
 
-// Colunas esperadas na planilha (mesma ordem definida no sac-script.gs)
-const IDX = { DATA: 0, NOME: 1, CONTATO: 2, CATEGORIA: 3, DESCRICAO: 4, PROTOCOLO: 5, STATUS: 6, RESPONSAVEL: 7, ATUALIZADO_EM: 8, RESOLVIDO_EM: 9 };
+// Colunas conforme os cabeçalhos reais da sua planilha:
+// Carimbo de data/hora | Nome | Nome do cliente | Descreva o assunto | (livre) | Protocolo | Status | Responsável | Atualizado em | Resolvido em
+const IDX = { DATA: 0, NOME: 1, NOME_CLIENTE: 2, ASSUNTO: 3, PROTOCOLO: 5, STATUS: 6, RESPONSAVEL: 7, ATUALIZADO_EM: 8, RESOLVIDO_EM: 9 };
 
 let chartCategoria = null;
 
@@ -252,12 +253,12 @@ function computarDados(linhas){
 
   validas.forEach(r => {
     const status = r[IDX.STATUS] || "Aberto";
-    const categoria = r[IDX.CATEGORIA] || "Sem categoria";
-    const contato = r[IDX.CONTATO] || "Desconhecido";
+    const categoria = r[IDX.ASSUNTO] || "Sem assunto";
+    const cliente = (r[IDX.NOME_CLIENTE] || r[IDX.NOME] || "Desconhecido").trim();
 
     porStatus[status] = (porStatus[status] || 0) + 1;
     porCategoria[categoria] = (porCategoria[categoria] || 0) + 1;
-    porCliente[contato] = (porCliente[contato] || 0) + 1;
+    porCliente[cliente] = (porCliente[cliente] || 0) + 1;
 
     const abertura = parseData(r[IDX.DATA]);
     const resolucao = parseData(r[IDX.RESOLVIDO_EM]);
@@ -270,7 +271,7 @@ function computarDados(linhas){
   const reincidentes = Object.entries(porCliente)
     .filter(([, qtd]) => qtd >= 3)
     .sort((a, b) => b[1] - a[1])
-    .map(([, qtd], i) => ({ contato: `Cliente ${i + 1}`, qtd })); // anonimizado — sem telefone/CPF na tela
+    .map(([nome, qtd]) => ({ contato: nome, qtd }));
 
   const tempoMedioHoras = temposResolucao.length
     ? temposResolucao.reduce((a, b) => a + b, 0) / temposResolucao.length
