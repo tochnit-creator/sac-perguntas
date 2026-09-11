@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
     --bg: #F4F5F3;
@@ -131,7 +132,7 @@
     flex-wrap:wrap;
     margin-top:14px;
   }
-  .connect-fields .field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px;}
+  .connect-fields .field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:280px;}
   .connect-fields label{font-size:11px;color:var(--ink-dim);}
   .connect-fields input{
     background:var(--panel);
@@ -185,9 +186,9 @@
   </div>
 
   <div class="panel" style="margin-bottom:8px;">
-    <h2>Clientes de atenção <span>— 3 ou mais chamados</span></h2>
+    <h2>Clientes de atenção <span>— 3 ou mais chamados (identidade anonimizada)</span></h2>
     <table>
-      <thead><tr><th>Contato</th><th>Chamados</th><th style="width:40%;">Frequência relativa</th></tr></thead>
+      <thead><tr><th>Cliente</th><th>Chamados</th><th style="width:40%;">Frequência relativa</th></tr></thead>
       <tbody id="tabela-reincidentes"></tbody>
     </table>
 
@@ -195,16 +196,12 @@
       <summary></summary>
       <div class="connect-fields">
         <div class="field">
-          <label>URL do Apps Script (Aplicativo da Web)</label>
-          <input id="input-url" type="text" value="https://script.google.com/macros/s/AKfycbz0ft8eYzo__J4Kxj19hXYi--9zrSObOEL-zfmedxas7cVKBLZkKTz98NHrIYpDQNbn/exec">
-        </div>
-        <div class="field" style="max-width:180px;">
-          <label>Token do painel</label>
-          <input id="input-token" type="text" placeholder="sua chave secreta">
+          <label>URL da planilha publicada (CSV)</label>
+          <input id="input-url" type="text" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4Hb-e1Gw3a8wVPVKGIJPHS95ujNor3REf-UVHKClTiR4tISBXEvQMICsNaVzPOSa2udE1hyYoiC-T/pub?gid=1510540104&single=true&output=csv">
         </div>
         <button onclick="conectar()">Conectar planilha real</button>
       </div>
-      <div class="connect-msg">Cole a URL e o token definidos no script (sac-script.gs). Enquanto isso, o painel mostra dados de exemplo.</div>
+      <div class="connect-msg">Fonte: planilha publicada na Web (Arquivo &gt; Compartilhar &gt; Publicar na Web &gt; CSV). Os dados são lidos e agregados aqui no navegador — telefone/CPF nunca aparece na tela, só a contagem por cliente, identificado como "Cliente 1", "Cliente 2" etc.</div>
     </details>
   </div>
 
@@ -218,19 +215,68 @@ const DADOS_EXEMPLO = {
   porStatus: { "Aberto": 9, "Em andamento": 6, "Resolvido": 27 },
   porCategoria: { "Dúvida sobre produto": 18, "Cor/variação divergente": 9, "Prazo de entrega": 7, "Troca/devolução": 5, "Outros": 3 },
   reincidentes: [
-    { contato: "11 9****-2201", qtd: 6 },
-    { contato: "21 9****-7743", qtd: 4 },
-    { contato: "31 9****-0098", qtd: 3 }
+    { contato: "Cliente 1", qtd: 6 },
+    { contato: "Cliente 2", qtd: 4 },
+    { contato: "Cliente 3", qtd: 3 }
   ],
   tempoMedioResolucaoHoras: 14.5
 };
 
+// Colunas esperadas na planilha (mesma ordem definida no sac-script.gs)
+const IDX = { DATA: 0, NOME: 1, CONTATO: 2, CATEGORIA: 3, DESCRICAO: 4, PROTOCOLO: 5, STATUS: 6, RESPONSAVEL: 7, ATUALIZADO_EM: 8, RESOLVIDO_EM: 9 };
+
 let chartCategoria = null;
+
+function parseData(str){
+  if (!str) return null;
+  // trata datas no formato brasileiro dd/mm/aaaa hh:mm:ss (padrão de planilhas em pt-BR)
+  const m = String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[, ]+(\d{1,2}):(\d{2}):(\d{2})/);
+  if (m) {
+    const [, d, mo, y, h, mi, s] = m;
+    return new Date(+y, +mo - 1, +d, +h, +mi, +s);
+  }
+  const d2 = new Date(str);
+  return isNaN(d2) ? null : d2;
+}
 
 function formatTempo(horas){
   if (horas === null || horas === undefined) return "—";
   if (horas < 24) return horas.toFixed(1) + "h";
   return (horas / 24).toFixed(1) + "d";
+}
+
+function computarDados(linhas){
+  const validas = linhas.filter(r => r[IDX.PROTOCOLO]);
+  const porStatus = {}, porCategoria = {}, porCliente = {};
+  const temposResolucao = [];
+
+  validas.forEach(r => {
+    const status = r[IDX.STATUS] || "Aberto";
+    const categoria = r[IDX.CATEGORIA] || "Sem categoria";
+    const contato = r[IDX.CONTATO] || "Desconhecido";
+
+    porStatus[status] = (porStatus[status] || 0) + 1;
+    porCategoria[categoria] = (porCategoria[categoria] || 0) + 1;
+    porCliente[contato] = (porCliente[contato] || 0) + 1;
+
+    const abertura = parseData(r[IDX.DATA]);
+    const resolucao = parseData(r[IDX.RESOLVIDO_EM]);
+    if (abertura && resolucao) {
+      const horas = (resolucao - abertura) / 36e5;
+      if (horas >= 0) temposResolucao.push(horas);
+    }
+  });
+
+  const reincidentes = Object.entries(porCliente)
+    .filter(([, qtd]) => qtd >= 3)
+    .sort((a, b) => b[1] - a[1])
+    .map(([, qtd], i) => ({ contato: `Cliente ${i + 1}`, qtd })); // anonimizado — sem telefone/CPF na tela
+
+  const tempoMedioHoras = temposResolucao.length
+    ? temposResolucao.reduce((a, b) => a + b, 0) / temposResolucao.length
+    : null;
+
+  return { totalChamados: validas.length, porStatus, porCategoria, reincidentes, tempoMedioResolucaoHoras: tempoMedioHoras };
 }
 
 function render(dados){
@@ -287,15 +333,16 @@ function render(dados){
 
 async function conectar(){
   const url = document.getElementById('input-url').value.trim();
-  const token = document.getElementById('input-token').value.trim();
   const pill = document.getElementById('status-pill');
-  if (!url || !token) { alert('Preencha a URL e o token.'); return; }
+  if (!url) { alert('Cole a URL do CSV publicado.'); return; }
 
   pill.textContent = 'conectando...';
   try {
-    const resp = await fetch(`${url}?action=dashboard&token=${encodeURIComponent(token)}`);
-    const dados = await resp.json();
-    if (dados.erro) { pill.textContent = 'token inválido'; return; }
+    const resp = await fetch(url);
+    const texto = await resp.text();
+    const parsed = Papa.parse(texto.trim(), { skipEmptyLines: true });
+    const linhas = parsed.data.slice(1); // remove linha de cabeçalho
+    const dados = computarDados(linhas);
     render(dados);
     pill.textContent = 'conectado';
     pill.classList.add('live');
