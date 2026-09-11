@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do SAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #F4F5F3;
+    --panel: #FFFFFF;
+    --line: #DADFDD;
+    --line-strong: #B9C0BD;
+    --ink: #1E2A32;
+    --ink-dim: #66727A;
+    --accent: #1F4A5E;
+    --amber: #A9752B;
+    --blue: #3B6E91;
+    --green: #3F7D58;
+    --red: #A23B33;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    padding:36px 28px 64px;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:16px;
+    padding-bottom:18px;
+    margin-bottom:32px;
+    border-bottom:2px solid var(--accent);
+    flex-wrap:wrap;
+  }
+  h1{font-size:21px;font-weight:600;margin:0;color:var(--accent);}
+  .subtitle{color:var(--ink-dim);font-size:13px;margin-top:6px;}
+  #status-pill{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    padding:5px 10px;
+    border:1px solid var(--line-strong);
+    color:var(--ink-dim);
+    background:var(--panel);
+  }
+  #status-pill.live{color:var(--green);border-color:var(--green);}
+
+  .kpis{
+    display:flex;
+    border-bottom:1px solid var(--line);
+    margin-bottom:32px;
+    padding-bottom:20px;
+  }
+  .kpi{flex:1;padding:0 24px;border-right:1px solid var(--line);}
+  .kpi:first-child{padding-left:0;}
+  .kpi:last-child{border-right:none;}
+  .kpi .label{font-size:12.5px;color:var(--ink-dim);margin-bottom:10px;}
+  .kpi .value{font-family:'IBM Plex Mono',monospace;font-size:27px;font-weight:600;color:var(--ink);}
+  .kpi .value.amber{color:var(--amber);}
+  .kpi .value.red{color:var(--red);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.15fr 0.85fr;
+    gap:24px;
+    margin-bottom:24px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:22px;
+  }
+  .panel h2{
+    font-size:13.5px;
+    font-weight:600;
+    margin:0 0 18px;
+    color:var(--ink);
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line);
+  }
+  .panel h2 span{color:var(--ink-dim);font-weight:400;}
+  canvas{max-height:220px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink);
+    font-size:12px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--ink);
+  }
+  thead th:last-child, tbody td:last-child{text-align:right;}
+  tbody td{padding:11px 0;border-bottom:1px solid var(--line);}
+  tbody tr:nth-child(even){background:#FAFAF8;}
+  tbody tr:last-child td{border-bottom:none;}
+  .contato{font-family:'IBM Plex Mono',monospace;}
+  .bar-track{background:#EDEEEB;height:6px;width:100%;overflow:hidden;margin-top:4px;}
+  .bar-fill{height:100%;background:var(--red);}
+  .empty-note{color:var(--ink-dim);font-size:13px;padding:12px 0;}
+
+  .status-bar{display:flex;height:9px;overflow:hidden;margin-bottom:16px;border:1px solid var(--line);}
+  .status-legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-dim);}
+  .status-legend .dot{width:8px;height:8px;display:inline-block;margin-right:6px;}
+
+  details.connect{
+    margin-top:8px;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  details.connect summary{
+    cursor:pointer;
+    font-size:12.5px;
+    color:var(--ink-dim);
+    list-style:none;
+  }
+  details.connect summary::-webkit-details-marker{display:none;}
+  details.connect summary:before{content:"Configuração da fonte de dados ";}
+  .connect-fields{
+    display:flex;
+    gap:12px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .connect-fields .field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px;}
+  .connect-fields label{font-size:11px;color:var(--ink-dim);}
+  .connect-fields input{
+    background:var(--panel);
+    border:1px solid var(--line-strong);
+    color:var(--ink);
+    padding:9px 10px;
+    font-size:13px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .connect-fields button{
+    background:transparent;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    padding:9px 16px;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .connect-fields button:hover{background:var(--accent);color:#fff;}
+  .connect-msg{font-size:12px;color:var(--ink-dim);width:100%;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Painel do SAC</h1>
+      <div class="subtitle">Reincidência, tempo de resposta e volume de chamados</div>
+    </div>
+    <div id="status-pill">dados de exemplo</div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="label">Total de chamados</div><div class="value" id="kpi-total">—</div></div>
+    <div class="kpi"><div class="label">Em aberto</div><div class="value amber" id="kpi-abertos">—</div></div>
+    <div class="kpi"><div class="label">Tempo médio de resolução</div><div class="value" id="kpi-tempo">—</div></div>
+    <div class="kpi"><div class="label">Clientes reincidentes (3+)</div><div class="value red" id="kpi-reincidentes">—</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Chamados por categoria <span>— o que mais gera dúvida</span></h2>
+      <canvas id="chart-categoria"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Status atual <span>— distribuição</span></h2>
+      <div class="status-bar" id="status-bar"></div>
+      <div class="status-legend" id="status-legend"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:8px;">
+    <h2>Clientes de atenção <span>— 3 ou mais chamados</span></h2>
+    <table>
+      <thead><tr><th>Contato</th><th>Chamados</th><th style="width:40%;">Frequência relativa</th></tr></thead>
+      <tbody id="tabela-reincidentes"></tbody>
+    </table>
+
+    <details class="connect">
+      <summary></summary>
+      <div class="connect-fields">
+        <div class="field">
+          <label>URL do Apps Script (Aplicativo da Web)</label>
+          <input id="input-url" type="text" value="https://script.google.com/macros/s/AKfycbz0ft8eYzo__J4Kxj19hXYi--9zrSObOEL-zfmedxas7cVKBLZkKTz98NHrIYpDQNbn/exec">
+        </div>
+        <div class="field" style="max-width:180px;">
+          <label>Token do painel</label>
+          <input id="input-token" type="text" placeholder="sua chave secreta">
+        </div>
+        <button onclick="conectar()">Conectar planilha real</button>
+      </div>
+      <div class="connect-msg">Cole a URL e o token definidos no script (sac-script.gs). Enquanto isso, o painel mostra dados de exemplo.</div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+const STATUS_COLORS = { "Aberto": "#A9752B", "Em andamento": "#3B6E91", "Resolvido": "#3F7D58" };
+
+const DADOS_EXEMPLO = {
+  totalChamados: 42,
+  porStatus: { "Aberto": 9, "Em andamento": 6, "Resolvido": 27 },
+  porCategoria: { "Dúvida sobre produto": 18, "Cor/variação divergente": 9, "Prazo de entrega": 7, "Troca/devolução": 5, "Outros": 3 },
+  reincidentes: [
+    { contato: "11 9****-2201", qtd: 6 },
+    { contato: "21 9****-7743", qtd: 4 },
+    { contato: "31 9****-0098", qtd: 3 }
+  ],
+  tempoMedioResolucaoHoras: 14.5
+};
+
+let chartCategoria = null;
+
+function formatTempo(horas){
+  if (horas === null || horas === undefined) return "—";
+  if (horas < 24) return horas.toFixed(1) + "h";
+  return (horas / 24).toFixed(1) + "d";
+}
+
+function render(dados){
+  document.getElementById('kpi-total').textContent = dados.totalChamados ?? 0;
+  document.getElementById('kpi-abertos').textContent = dados.porStatus?.["Aberto"] ?? 0;
+  document.getElementById('kpi-tempo').textContent = formatTempo(dados.tempoMedioResolucaoHoras);
+  document.getElementById('kpi-reincidentes').textContent = (dados.reincidentes || []).length;
+
+  const categorias = Object.entries(dados.porCategoria || {}).sort((a,b) => b[1]-a[1]);
+  if (chartCategoria) chartCategoria.destroy();
+  chartCategoria = new Chart(document.getElementById('chart-categoria'), {
+    type: 'bar',
+    data: {
+      labels: categorias.map(c => c[0]),
+      datasets: [{ data: categorias.map(c => c[1]), backgroundColor: '#1F4A5E', borderRadius: 1, maxBarThickness: 20 }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#66727A', font: { size: 11 } }, grid: { color: '#E4E6E3' } },
+        y: { ticks: { color: '#1E2A32', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  const totalStatus = Object.values(dados.porStatus || {}).reduce((a,b) => a+b, 0) || 1;
+  const bar = document.getElementById('status-bar');
+  const legend = document.getElementById('status-legend');
+  bar.innerHTML = '';
+  legend.innerHTML = '';
+  Object.entries(dados.porStatus || {}).forEach(([status, qtd]) => {
+    const pct = (qtd / totalStatus * 100).toFixed(1);
+    const color = STATUS_COLORS[status] || '#66727A';
+    bar.innerHTML += `<div style="width:${pct}%;background:${color};"></div>`;
+    legend.innerHTML += `<span><span class="dot" style="background:${color};"></span>${status} — ${qtd}</span>`;
+  });
+
+  const tbody = document.getElementById('tabela-reincidentes');
+  const lista = dados.reincidentes || [];
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-note">Nenhum cliente com 3 ou mais chamados até agora.</td></tr>';
+  } else {
+    const maxQtd = Math.max(...lista.map(l => l.qtd));
+    tbody.innerHTML = lista.map(l => `
+      <tr>
+        <td class="contato">${l.contato}</td>
+        <td>${l.qtd}</td>
+        <td><div class="bar-track"><div class="bar-fill" style="width:${(l.qtd/maxQtd*100).toFixed(0)}%;"></div></div></td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function conectar(){
+  const url = document.getElementById('input-url').value.trim();
+  const token = document.getElementById('input-token').value.trim();
+  const pill = document.getElementById('status-pill');
+  if (!url || !token) { alert('Preencha a URL e o token.'); return; }
+
+  pill.textContent = 'conectando...';
+  try {
+    const resp = await fetch(`${url}?action=dashboard&token=${encodeURIComponent(token)}`);
+    const dados = await resp.json();
+    if (dados.erro) { pill.textContent = 'token inválido'; return; }
+    render(dados);
+    pill.textContent = 'conectado';
+    pill.classList.add('live');
+  } catch (err) {
+    pill.textContent = 'erro de conexão';
+    console.error(err);
+  }
+}
+
+render(DADOS_EXEMPLO);
+</script>
+</body>
+</html>
