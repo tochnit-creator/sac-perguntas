@@ -348,12 +348,15 @@ async function conectar(){
     pill.textContent = 'conectado';
     pill.classList.add('live');
   } catch (err) {
-    pill.textContent = 'erro de conexão';
+    pill.textContent = 'erro de conexão (exibindo exemplo)';
+    render(DADOS_EXEMPLO);
     console.error(err);
   }
 }
 
-render(DADOS_EXEMPLO);
+// A planilha já vem fixada no campo acima — conecta sozinho ao abrir o painel.
+conectar();
 </script>
+
 </body>
 </html>
