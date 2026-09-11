@@ -30,7 +30,7 @@
     font-family:'IBM Plex Sans', sans-serif;
     padding:36px 28px 64px;
   }
-  .wrap{max-width:1100px;margin:0 auto;}
+  .wrap{max-width:1140px;margin:0 auto;}
 
   header{
     display:flex;
@@ -38,7 +38,7 @@
     align-items:flex-end;
     gap:16px;
     padding-bottom:18px;
-    margin-bottom:32px;
+    margin-bottom:18px;
     border-bottom:2px solid var(--accent);
     flex-wrap:wrap;
   }
@@ -53,6 +53,45 @@
     background:var(--panel);
   }
   #status-pill.live{color:var(--green);border-color:var(--green);}
+
+  .filterbar{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .filterbar label{font-size:12.5px;color:var(--ink-dim);}
+  .filterbar select{
+    background:var(--panel);
+    border:1px solid var(--line-strong);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    padding:7px 10px;
+  }
+
+  .tabs{
+    display:flex;
+    gap:24px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:28px;
+  }
+  .tab-btn{
+    background:none;
+    border:none;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--ink-dim);
+    padding:0 0 12px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
 
   .kpis{
     display:flex;
@@ -99,57 +138,43 @@
     padding-bottom:10px;
     border-bottom:2px solid var(--ink);
   }
-  thead th:last-child, tbody td:last-child{text-align:right;}
-  tbody td{padding:11px 0;border-bottom:1px solid var(--line);}
+  thead th.num, tbody td.num{text-align:right;}
+  tbody td{padding:11px 14px 11px 0;border-bottom:1px solid var(--line);}
   tbody tr:nth-child(even){background:#FAFAF8;}
   tbody tr:last-child td{border-bottom:none;}
-  .contato{font-family:'IBM Plex Mono',monospace;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
   .bar-track{background:#EDEEEB;height:6px;width:100%;overflow:hidden;margin-top:4px;}
   .bar-fill{height:100%;background:var(--red);}
   .empty-note{color:var(--ink-dim);font-size:13px;padding:12px 0;}
+  .dot{width:8px;height:8px;display:inline-block;margin-right:6px;}
 
   .status-bar{display:flex;height:9px;overflow:hidden;margin-bottom:16px;border:1px solid var(--line);}
   .status-legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-dim);}
-  .status-legend .dot{width:8px;height:8px;display:inline-block;margin-right:6px;}
 
-  details.connect{
-    margin-top:8px;
-    border-top:1px solid var(--line);
-    padding-top:16px;
+  .resumo-assunto{list-style:none;margin:0;padding:0;}
+  .resumo-assunto li{
+    display:flex;justify-content:space-between;gap:16px;
+    padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;
   }
-  details.connect summary{
-    cursor:pointer;
-    font-size:12.5px;
-    color:var(--ink-dim);
-    list-style:none;
-  }
+  .resumo-assunto li:last-child{border-bottom:none;}
+  .resumo-assunto .pct{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--accent);width:60px;text-align:right;}
+
+  .table-scroll{max-height:480px;overflow-y:auto;}
+
+  details.connect{margin-top:8px;border-top:1px solid var(--line);padding-top:16px;}
+  details.connect summary{cursor:pointer;font-size:12.5px;color:var(--ink-dim);list-style:none;}
   details.connect summary::-webkit-details-marker{display:none;}
   details.connect summary:before{content:"Configuração da fonte de dados ";}
-  .connect-fields{
-    display:flex;
-    gap:12px;
-    align-items:flex-end;
-    flex-wrap:wrap;
-    margin-top:14px;
-  }
+  .connect-fields{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:14px;}
   .connect-fields .field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:280px;}
   .connect-fields label{font-size:11px;color:var(--ink-dim);}
   .connect-fields input{
-    background:var(--panel);
-    border:1px solid var(--line-strong);
-    color:var(--ink);
-    padding:9px 10px;
-    font-size:13px;
-    font-family:'IBM Plex Mono',monospace;
+    background:var(--panel);border:1px solid var(--line-strong);color:var(--ink);
+    padding:9px 10px;font-size:13px;font-family:'IBM Plex Mono',monospace;
   }
   .connect-fields button{
-    background:transparent;
-    color:var(--accent);
-    border:1px solid var(--accent);
-    padding:9px 16px;
-    font-weight:600;
-    font-size:13px;
-    cursor:pointer;
+    background:transparent;color:var(--accent);border:1px solid var(--accent);
+    padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer;
   }
   .connect-fields button:hover{background:var(--accent);color:#fff;}
   .connect-msg{font-size:12px;color:var(--ink-dim);width:100%;margin-top:8px;}
@@ -166,84 +191,124 @@
     <div id="status-pill">dados de exemplo</div>
   </header>
 
-  <div class="kpis">
-    <div class="kpi"><div class="label">Total de chamados</div><div class="value" id="kpi-total">—</div></div>
-    <div class="kpi"><div class="label">Em aberto</div><div class="value amber" id="kpi-abertos">—</div></div>
-    <div class="kpi"><div class="label">Tempo médio de resolução</div><div class="value" id="kpi-tempo">—</div></div>
-    <div class="kpi"><div class="label">Clientes reincidentes (3+)</div><div class="value red" id="kpi-reincidentes">—</div></div>
+  <div class="filterbar">
+    <label for="filtro-periodo">Período</label>
+    <select id="filtro-periodo"><option value="todos">Todos os períodos</option></select>
   </div>
 
-  <div class="grid">
-    <div class="panel">
-      <h2>Chamados por assunto <span>— o que mais gera dúvida</span></h2>
-      <canvas id="chart-categoria"></canvas>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="resumo">Resumo</button>
+    <button class="tab-btn" data-tab="todos">Todos os chamados</button>
+  </div>
+
+  <!-- ===== TAB: RESUMO ===== -->
+  <div id="tab-resumo" class="tab-content active">
+
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total de chamados</div><div class="value" id="kpi-total">—</div></div>
+      <div class="kpi"><div class="label">Em aberto</div><div class="value amber" id="kpi-abertos">—</div></div>
+      <div class="kpi"><div class="label">Tempo médio de resolução</div><div class="value" id="kpi-tempo">—</div></div>
+      <div class="kpi"><div class="label">Clientes reincidentes (3+)</div><div class="value red" id="kpi-reincidentes">—</div></div>
     </div>
-    <div class="panel">
-      <h2>Status atual <span>— distribuição</span></h2>
-      <div class="status-bar" id="status-bar"></div>
-      <div class="status-legend" id="status-legend"></div>
-    </div>
-  </div>
 
-  <div class="panel" style="margin-bottom:24px;">
-    <h2>Chamados recentes <span>— últimos registrados, todos os clientes</span></h2>
-    <table>
-      <thead><tr><th>Protocolo</th><th>Cliente</th><th>Assunto</th><th style="text-align:left;">Status</th></tr></thead>
-      <tbody id="tabela-chamados"></tbody>
-    </table>
-  </div>
-
-  <div class="panel" style="margin-bottom:8px;">
-    <h2>Clientes de atenção <span>— 3 ou mais chamados</span></h2>
-    <table>
-      <thead><tr><th>Cliente</th><th>Chamados</th><th style="width:40%;">Frequência relativa</th></tr></thead>
-      <tbody id="tabela-reincidentes"></tbody>
-    </table>
-
-    <details class="connect">
-      <summary></summary>
-      <div class="connect-fields">
-        <div class="field">
-          <label>URL da planilha publicada (CSV)</label>
-          <input id="input-url" type="text" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4Hb-e1Gw3a8wVPVKGIJPHS95ujNor3REf-UVHKClTiR4tISBXEvQMICsNaVzPOSa2udE1hyYoiC-T/pub?gid=1510540104&single=true&output=csv">
-        </div>
-        <button onclick="conectar()">Conectar planilha real</button>
+    <div class="grid">
+      <div class="panel">
+        <h2>Chamados por assunto <span>— o que mais gera dúvida</span></h2>
+        <canvas id="chart-categoria"></canvas>
       </div>
-      <div class="connect-msg">Fonte: planilha publicada na Web (Arquivo &gt; Compartilhar &gt; Publicar na Web &gt; CSV). Os dados são lidos e agregados aqui no navegador. A reincidência é contada por "Nome do cliente" (e usa "Nome" como reserva se esse campo estiver vazio).</div>
-    </details>
+      <div class="panel">
+        <h2>Status atual <span>— distribuição</span></h2>
+        <div class="status-bar" id="status-bar"></div>
+        <div class="status-legend" id="status-legend"></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px;">
+      <h2>Aberturas por responsável <span>— coluna "Nome", quem registrou a ocorrência</span></h2>
+      <canvas id="chart-atendente"></canvas>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px;">
+      <h2>Chamados recentes <span>— últimos 5, todos os clientes</span></h2>
+      <table>
+        <thead><tr><th>Protocolo</th><th>Cliente</th><th>Assunto</th><th>Status</th></tr></thead>
+        <tbody id="tabela-chamados-recentes"></tbody>
+      </table>
+    </div>
+
+    <div class="panel" style="margin-bottom:8px;">
+      <h2>Clientes de atenção <span>— 3 ou mais chamados</span></h2>
+      <table>
+        <thead><tr><th>Cliente</th><th class="num">Chamados</th><th style="width:40%;">Frequência relativa</th></tr></thead>
+        <tbody id="tabela-reincidentes"></tbody>
+      </table>
+
+      <details class="connect">
+        <summary></summary>
+        <div class="connect-fields">
+          <div class="field">
+            <label>URL da planilha publicada (CSV)</label>
+            <input id="input-url" type="text" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4Hb-e1Gw3a8wVPVKGIJPHS95ujNor3REf-UVHKClTiR4tISBXEvQMICsNaVzPOSa2udE1hyYoiC-T/pub?gid=1510540104&single=true&output=csv">
+          </div>
+          <button onclick="conectar()">Reconectar planilha</button>
+        </div>
+        <div class="connect-msg">A planilha já vem fixada acima e conecta sozinha ao abrir o painel. Reincidência é contada por "Nome do cliente" (ou "Nome", se esse campo estiver vazio).</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ===== TAB: TODOS OS CHAMADOS ===== -->
+  <div id="tab-todos" class="tab-content">
+    <div class="panel" style="margin-bottom:24px;">
+      <h2>Resumo por assunto <span>— participação de cada assunto no período</span></h2>
+      <ul class="resumo-assunto" id="resumo-assunto-lista"></ul>
+    </div>
+
+    <div class="panel">
+      <h2>Todos os chamados <span id="contagem-todos"></span></h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Protocolo</th><th>Registrado por</th><th>Cliente</th><th>Assunto</th><th>Status</th><th>Data</th></tr></thead>
+          <tbody id="tabela-todos"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 </div>
 
 <script>
 const STATUS_COLORS = { "Aberto": "#A9752B", "Em andamento": "#3B6E91", "Resolvido": "#3F7D58" };
+const NOMES_MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 const DADOS_EXEMPLO = {
-  totalChamados: 42,
-  porStatus: { "Aberto": 9, "Em andamento": 6, "Resolvido": 27 },
-  porCategoria: { "Dúvida sobre produto": 18, "Cor/variação divergente": 9, "Prazo de entrega": 7, "Troca/devolução": 5, "Outros": 3 },
+  totalChamados: 17,
+  porStatus: { "Aberto": 4, "Em andamento": 3, "Resolvido": 10 },
+  porCategoria: { "Dúvida sobre produto": 7, "Cor/variação divergente": 4, "Prazo de entrega": 3, "Troca/devolução": 2, "Outros": 1 },
+  porAtendente: { "Gabriel": 9, "Fernanda": 5, "Lucas": 3 },
   reincidentes: [
     { contato: "Maria Oliveira", qtd: 6 },
     { contato: "João Souza", qtd: 4 },
     { contato: "Ana Costa", qtd: 3 }
   ],
   chamados: [
-    { protocolo: "SAC-260910-0041", cliente: "Maria Oliveira", assunto: "Dúvida sobre produto", status: "Aberto" },
-    { protocolo: "SAC-260910-0040", cliente: "João Souza", assunto: "Prazo de entrega", status: "Em andamento" },
-    { protocolo: "SAC-260909-0039", cliente: "Ana Costa", assunto: "Troca/devolução", status: "Resolvido" }
+    { protocolo: "SAC-260910-0041", registradoPor: "Gabriel", cliente: "Maria Oliveira", assunto: "Dúvida sobre produto", status: "Aberto", dataObj: new Date(2026,8,10,9,10) },
+    { protocolo: "SAC-260910-0040", registradoPor: "Fernanda", cliente: "João Souza", assunto: "Prazo de entrega", status: "Em andamento", dataObj: new Date(2026,8,10,8,40) },
+    { protocolo: "SAC-260909-0039", registradoPor: "Gabriel", cliente: "Ana Costa", assunto: "Troca/devolução", status: "Resolvido", dataObj: new Date(2026,8,9,17,5) }
   ],
   tempoMedioResolucaoHoras: 14.5
 };
 
 // Colunas conforme os cabeçalhos reais da sua planilha:
-// Carimbo de data/hora | Nome | Nome do cliente | Descreva o assunto | (livre) | Protocolo | Status | Responsável | Atualizado em | Resolvido em
+// Carimbo de data/hora | Nome (quem abriu) | Nome do cliente | Descreva o assunto | (livre) | Protocolo | Status | Responsável | Atualizado em | Resolvido em
 const IDX = { DATA: 0, NOME: 1, NOME_CLIENTE: 2, ASSUNTO: 3, PROTOCOLO: 5, STATUS: 6, RESPONSAVEL: 7, ATUALIZADO_EM: 8, RESOLVIDO_EM: 9 };
 
-let chartCategoria = null;
+let chartCategoria = null, chartAtendente = null;
+let linhasCruas = []; // todas as linhas válidas já lidas da planilha, sem filtro de período
+let modoExemplo = false;
 
 function parseData(str){
   if (!str) return null;
-  // trata datas no formato brasileiro dd/mm/aaaa hh:mm:ss (padrão de planilhas em pt-BR)
   const m = String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[, ]+(\d{1,2}):(\d{2}):(\d{2})/);
   if (m) {
     const [, d, mo, y, h, mi, s] = m;
@@ -259,19 +324,39 @@ function formatTempo(horas){
   return (horas / 24).toFixed(1) + "d";
 }
 
+function chaveMes(data){
+  return data ? `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}` : null;
+}
+
+function popularFiltroPeriodo(linhas){
+  const select = document.getElementById('filtro-periodo');
+  const chaves = new Set();
+  linhas.forEach(r => {
+    const d = parseData(r[IDX.DATA]);
+    if (d) chaves.add(chaveMes(d));
+  });
+  const ordenadas = Array.from(chaves).sort().reverse();
+  select.innerHTML = '<option value="todos">Todos os períodos</option>' + ordenadas.map(ch => {
+    const [y, m] = ch.split('-');
+    return `<option value="${ch}">${NOMES_MESES[+m-1]} de ${y}</option>`;
+  }).join('');
+}
+
 function computarDados(linhas){
   const validas = linhas.filter(r => r[IDX.PROTOCOLO]);
-  const porStatus = {}, porCategoria = {}, porCliente = {};
+  const porStatus = {}, porCategoria = {}, porCliente = {}, porAtendente = {};
   const temposResolucao = [];
 
-  validas.forEach(r => {
+  const chamados = validas.map(r => {
     const status = r[IDX.STATUS] || "Aberto";
     const categoria = r[IDX.ASSUNTO] || "Sem assunto";
     const cliente = (r[IDX.NOME_CLIENTE] || r[IDX.NOME] || "Desconhecido").trim();
+    const registradoPor = (r[IDX.NOME] || "Desconhecido").trim();
 
     porStatus[status] = (porStatus[status] || 0) + 1;
     porCategoria[categoria] = (porCategoria[categoria] || 0) + 1;
     porCliente[cliente] = (porCliente[cliente] || 0) + 1;
+    porAtendente[registradoPor] = (porAtendente[registradoPor] || 0) + 1;
 
     const abertura = parseData(r[IDX.DATA]);
     const resolucao = parseData(r[IDX.RESOLVIDO_EM]);
@@ -279,7 +364,14 @@ function computarDados(linhas){
       const horas = (resolucao - abertura) / 36e5;
       if (horas >= 0) temposResolucao.push(horas);
     }
-  });
+
+    return {
+      protocolo: r[IDX.PROTOCOLO] || "—",
+      registradoPor, cliente,
+      assunto: categoria, status,
+      dataObj: abertura
+    };
+  }).sort((a, b) => (b.dataObj || 0) - (a.dataObj || 0));
 
   const reincidentes = Object.entries(porCliente)
     .filter(([, qtd]) => qtd >= 3)
@@ -290,21 +382,21 @@ function computarDados(linhas){
     ? temposResolucao.reduce((a, b) => a + b, 0) / temposResolucao.length
     : null;
 
-  const chamados = validas
-    .map(r => ({
-      protocolo: r[IDX.PROTOCOLO] || "—",
-      cliente: (r[IDX.NOME_CLIENTE] || r[IDX.NOME] || "Desconhecido").trim(),
-      assunto: r[IDX.ASSUNTO] || "Sem assunto",
-      status: r[IDX.STATUS] || "Aberto",
-      dataObj: parseData(r[IDX.DATA]),
-    }))
-    .sort((a, b) => (b.dataObj || 0) - (a.dataObj || 0))
-    .slice(0, 15);
-
-  return { totalChamados: validas.length, porStatus, porCategoria, reincidentes, chamados, tempoMedioResolucaoHoras: tempoMedioHoras };
+  return { totalChamados: validas.length, porStatus, porCategoria, porAtendente, reincidentes, chamados, tempoMedioResolucaoHoras: tempoMedioHoras };
 }
 
-function render(dados){
+function aplicarFiltro(){
+  if (modoExemplo) { renderResumo(DADOS_EXEMPLO); renderTodos(DADOS_EXEMPLO); return; }
+  const periodo = document.getElementById('filtro-periodo').value;
+  const linhasFiltradas = periodo === 'todos'
+    ? linhasCruas
+    : linhasCruas.filter(r => chaveMes(parseData(r[IDX.DATA])) === periodo);
+  const dados = computarDados(linhasFiltradas);
+  renderResumo(dados);
+  renderTodos(dados);
+}
+
+function renderResumo(dados){
   document.getElementById('kpi-total').textContent = dados.totalChamados ?? 0;
   document.getElementById('kpi-abertos').textContent = dados.porStatus?.["Aberto"] ?? 0;
   document.getElementById('kpi-tempo').textContent = formatTempo(dados.tempoMedioResolucaoHoras);
@@ -314,13 +406,9 @@ function render(dados){
   if (chartCategoria) chartCategoria.destroy();
   chartCategoria = new Chart(document.getElementById('chart-categoria'), {
     type: 'bar',
-    data: {
-      labels: categorias.map(c => c[0]),
-      datasets: [{ data: categorias.map(c => c[1]), backgroundColor: '#1F4A5E', borderRadius: 1, maxBarThickness: 20 }]
-    },
+    data: { labels: categorias.map(c => c[0]), datasets: [{ data: categorias.map(c => c[1]), backgroundColor: '#1F4A5E', borderRadius: 1, maxBarThickness: 20 }] },
     options: {
-      indexAxis: 'y',
-      plugins: { legend: { display: false } },
+      indexAxis: 'y', plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { color: '#66727A', font: { size: 11 } }, grid: { color: '#E4E6E3' } },
         y: { ticks: { color: '#1E2A32', font: { size: 12 } }, grid: { display: false } }
@@ -328,11 +416,24 @@ function render(dados){
     }
   });
 
+  const atendentes = Object.entries(dados.porAtendente || {}).sort((a,b) => b[1]-a[1]);
+  if (chartAtendente) chartAtendente.destroy();
+  chartAtendente = new Chart(document.getElementById('chart-atendente'), {
+    type: 'bar',
+    data: { labels: atendentes.map(a => a[0]), datasets: [{ data: atendentes.map(a => a[1]), backgroundColor: '#3B6E91', borderRadius: 1, maxBarThickness: 26 }] },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#1E2A32', font: { size: 12 } }, grid: { display: false } },
+        y: { ticks: { color: '#66727A', font: { size: 11 }, precision: 0 }, grid: { color: '#E4E6E3' } }
+      }
+    }
+  });
+
   const totalStatus = Object.values(dados.porStatus || {}).reduce((a,b) => a+b, 0) || 1;
   const bar = document.getElementById('status-bar');
   const legend = document.getElementById('status-legend');
-  bar.innerHTML = '';
-  legend.innerHTML = '';
+  bar.innerHTML = ''; legend.innerHTML = '';
   Object.entries(dados.porStatus || {}).forEach(([status, qtd]) => {
     const pct = (qtd / totalStatus * 100).toFixed(1);
     const color = STATUS_COLORS[status] || '#66727A';
@@ -340,38 +441,59 @@ function render(dados){
     legend.innerHTML += `<span><span class="dot" style="background:${color};"></span>${status} — ${qtd}</span>`;
   });
 
-  const tbodyChamados = document.getElementById('tabela-chamados');
-  const listaChamados = dados.chamados || [];
-  if (listaChamados.length === 0) {
-    tbodyChamados.innerHTML = '<tr><td colspan="4" class="empty-note">Nenhum chamado registrado ainda.</td></tr>';
-  } else {
-    tbodyChamados.innerHTML = listaChamados.map(c => {
-      const cor = STATUS_COLORS[c.status] || '#66727A';
-      return `
+  const tbodyRecentes = document.getElementById('tabela-chamados-recentes');
+  const recentes = (dados.chamados || []).slice(0, 5);
+  tbodyRecentes.innerHTML = recentes.length === 0
+    ? '<tr><td colspan="4" class="empty-note">Nenhum chamado neste período.</td></tr>'
+    : recentes.map(c => `
         <tr>
-          <td class="contato">${c.protocolo}</td>
+          <td class="mono">${c.protocolo}</td>
           <td>${c.cliente}</td>
           <td>${c.assunto}</td>
-          <td style="text-align:left;"><span class="dot" style="display:inline-block;width:8px;height:8px;background:${cor};margin-right:6px;"></span>${c.status}</td>
-        </tr>
-      `;
-    }).join('');
-  }
+          <td><span class="dot" style="background:${STATUS_COLORS[c.status] || '#66727A'};"></span>${c.status}</td>
+        </tr>`).join('');
 
   const tbody = document.getElementById('tabela-reincidentes');
   const lista = dados.reincidentes || [];
   if (lista.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-note">Nenhum cliente com 3 ou mais chamados até agora.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-note">Nenhum cliente com 3 ou mais chamados neste período.</td></tr>';
   } else {
     const maxQtd = Math.max(...lista.map(l => l.qtd));
     tbody.innerHTML = lista.map(l => `
       <tr>
-        <td class="contato">${l.contato}</td>
-        <td>${l.qtd}</td>
+        <td>${l.contato}</td>
+        <td class="num">${l.qtd}</td>
         <td><div class="bar-track"><div class="bar-fill" style="width:${(l.qtd/maxQtd*100).toFixed(0)}%;"></div></div></td>
-      </tr>
-    `).join('');
+      </tr>`).join('');
   }
+}
+
+function renderTodos(dados){
+  const total = dados.totalChamados || 0;
+  document.getElementById('contagem-todos').textContent = `— ${total} no período selecionado`;
+
+  const resumoLista = document.getElementById('resumo-assunto-lista');
+  const categorias = Object.entries(dados.porCategoria || {}).sort((a,b) => b[1]-a[1]);
+  resumoLista.innerHTML = categorias.length === 0
+    ? '<li class="empty-note">Sem chamados neste período.</li>'
+    : categorias.map(([assunto, qtd]) => {
+        const pct = total ? (qtd / total * 100).toFixed(0) : 0;
+        return `<li><span>${assunto} <span style="color:var(--ink-dim);">(${qtd})</span></span><span class="pct">${pct}%</span></li>`;
+      }).join('');
+
+  const tbodyTodos = document.getElementById('tabela-todos');
+  const lista = dados.chamados || [];
+  tbodyTodos.innerHTML = lista.length === 0
+    ? '<tr><td colspan="6" class="empty-note">Nenhum chamado neste período.</td></tr>'
+    : lista.map(c => `
+        <tr>
+          <td class="mono">${c.protocolo}</td>
+          <td>${c.registradoPor || '—'}</td>
+          <td>${c.cliente}</td>
+          <td>${c.assunto}</td>
+          <td><span class="dot" style="background:${STATUS_COLORS[c.status] || '#66727A'};"></span>${c.status}</td>
+          <td class="mono">${c.dataObj ? c.dataObj.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+        </tr>`).join('');
 }
 
 async function conectar(){
@@ -384,21 +506,35 @@ async function conectar(){
     const resp = await fetch(url);
     const texto = await resp.text();
     const parsed = Papa.parse(texto.trim(), { skipEmptyLines: true });
-    const linhas = parsed.data.slice(1); // remove linha de cabeçalho
-    const dados = computarDados(linhas);
-    render(dados);
+    linhasCruas = parsed.data.slice(1); // remove cabeçalho
+    modoExemplo = false;
+    popularFiltroPeriodo(linhasCruas);
+    aplicarFiltro();
     pill.textContent = 'conectado';
     pill.classList.add('live');
   } catch (err) {
     pill.textContent = 'erro de conexão (exibindo exemplo)';
-    render(DADOS_EXEMPLO);
+    modoExemplo = true;
+    document.getElementById('filtro-periodo').innerHTML = '<option>dados de exemplo</option>';
+    renderResumo(DADOS_EXEMPLO);
+    renderTodos(DADOS_EXEMPLO);
     console.error(err);
   }
 }
 
+document.getElementById('filtro-periodo').addEventListener('change', aplicarFiltro);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
 // A planilha já vem fixada no campo acima — conecta sozinho ao abrir o painel.
 conectar();
 </script>
-
 </body>
 </html>
