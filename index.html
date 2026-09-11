@@ -185,6 +185,14 @@
     </div>
   </div>
 
+  <div class="panel" style="margin-bottom:24px;">
+    <h2>Chamados recentes <span>— últimos registrados, todos os clientes</span></h2>
+    <table>
+      <thead><tr><th>Protocolo</th><th>Cliente</th><th>Assunto</th><th style="text-align:left;">Status</th></tr></thead>
+      <tbody id="tabela-chamados"></tbody>
+    </table>
+  </div>
+
   <div class="panel" style="margin-bottom:8px;">
     <h2>Clientes de atenção <span>— 3 ou mais chamados</span></h2>
     <table>
@@ -218,6 +226,11 @@ const DADOS_EXEMPLO = {
     { contato: "Maria Oliveira", qtd: 6 },
     { contato: "João Souza", qtd: 4 },
     { contato: "Ana Costa", qtd: 3 }
+  ],
+  chamados: [
+    { protocolo: "SAC-260910-0041", cliente: "Maria Oliveira", assunto: "Dúvida sobre produto", status: "Aberto" },
+    { protocolo: "SAC-260910-0040", cliente: "João Souza", assunto: "Prazo de entrega", status: "Em andamento" },
+    { protocolo: "SAC-260909-0039", cliente: "Ana Costa", assunto: "Troca/devolução", status: "Resolvido" }
   ],
   tempoMedioResolucaoHoras: 14.5
 };
@@ -277,7 +290,18 @@ function computarDados(linhas){
     ? temposResolucao.reduce((a, b) => a + b, 0) / temposResolucao.length
     : null;
 
-  return { totalChamados: validas.length, porStatus, porCategoria, reincidentes, tempoMedioResolucaoHoras: tempoMedioHoras };
+  const chamados = validas
+    .map(r => ({
+      protocolo: r[IDX.PROTOCOLO] || "—",
+      cliente: (r[IDX.NOME_CLIENTE] || r[IDX.NOME] || "Desconhecido").trim(),
+      assunto: r[IDX.ASSUNTO] || "Sem assunto",
+      status: r[IDX.STATUS] || "Aberto",
+      dataObj: parseData(r[IDX.DATA]),
+    }))
+    .sort((a, b) => (b.dataObj || 0) - (a.dataObj || 0))
+    .slice(0, 15);
+
+  return { totalChamados: validas.length, porStatus, porCategoria, reincidentes, chamados, tempoMedioResolucaoHoras: tempoMedioHoras };
 }
 
 function render(dados){
@@ -315,6 +339,24 @@ function render(dados){
     bar.innerHTML += `<div style="width:${pct}%;background:${color};"></div>`;
     legend.innerHTML += `<span><span class="dot" style="background:${color};"></span>${status} — ${qtd}</span>`;
   });
+
+  const tbodyChamados = document.getElementById('tabela-chamados');
+  const listaChamados = dados.chamados || [];
+  if (listaChamados.length === 0) {
+    tbodyChamados.innerHTML = '<tr><td colspan="4" class="empty-note">Nenhum chamado registrado ainda.</td></tr>';
+  } else {
+    tbodyChamados.innerHTML = listaChamados.map(c => {
+      const cor = STATUS_COLORS[c.status] || '#66727A';
+      return `
+        <tr>
+          <td class="contato">${c.protocolo}</td>
+          <td>${c.cliente}</td>
+          <td>${c.assunto}</td>
+          <td style="text-align:left;"><span class="dot" style="display:inline-block;width:8px;height:8px;background:${cor};margin-right:6px;"></span>${c.status}</td>
+        </tr>
+      `;
+    }).join('');
+  }
 
   const tbody = document.getElementById('tabela-reincidentes');
   const lista = dados.reincidentes || [];
