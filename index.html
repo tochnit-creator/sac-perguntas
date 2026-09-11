@@ -207,7 +207,6 @@
     <div class="kpis">
       <div class="kpi"><div class="label">Total de chamados</div><div class="value" id="kpi-total">—</div></div>
       <div class="kpi"><div class="label">Em aberto</div><div class="value amber" id="kpi-abertos">—</div></div>
-      <div class="kpi"><div class="label">Tempo médio de resolução</div><div class="value" id="kpi-tempo">—</div></div>
       <div class="kpi"><div class="label">Clientes reincidentes (3+)</div><div class="value red" id="kpi-reincidentes">—</div></div>
     </div>
 
@@ -399,7 +398,6 @@ function aplicarFiltro(){
 function renderResumo(dados){
   document.getElementById('kpi-total').textContent = dados.totalChamados ?? 0;
   document.getElementById('kpi-abertos').textContent = dados.porStatus?.["Aberto"] ?? 0;
-  document.getElementById('kpi-tempo').textContent = formatTempo(dados.tempoMedioResolucaoHoras);
   document.getElementById('kpi-reincidentes').textContent = (dados.reincidentes || []).length;
 
   const categorias = Object.entries(dados.porCategoria || {}).sort((a,b) => b[1]-a[1]);
