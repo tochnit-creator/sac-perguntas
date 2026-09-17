@@ -214,7 +214,7 @@ padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer;
 <div class="panel" style="margin-bottom:24px;">
 <h2>Chamados recentes <span>— últimos 5, todos os clientes</span></h2>
 <table>
-<thead><tr><th>Protocolo</th><th>Cliente</th><th>Assunto</th><th>Status</th></tr></thead>
+<thead><tr><th>Protocolo</th><th>Nome do cliente</th><th>Assunto</th><th>Status</th></tr></thead>
 <tbody id="tabela-chamados-recentes"></tbody>
 </table>
 </div>
@@ -250,7 +250,7 @@ padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer;
 <h2>Todos os chamados <span id="contagem-todos"></span></h2>
 <div class="table-scroll">
 <table>
-<thead><tr><th>Protocolo</th><th>Registrado por</th><th>Cliente</th><th>Assunto</th><th>Status</th><th>Data</th></tr></thead>
+<thead><tr><th>Protocolo</th><th>Registrado por</th><th>Nome do cliente</th><th>Assunto</th><th>Status</th><th>Data</th></tr></thead>
 <tbody id="tabela-todos"></tbody>
 </table>
 </div>
@@ -274,9 +274,9 @@ reincidentes: [
 { contato: "Ana Costa", qtd: 3 }
 ],
 chamados: [
-{ protocolo: "SAC-260910-0041", registradoPor: "Gabriel", cliente: "Maria Oliveira", assunto: "Dúvida sobre produto", status: "Aberto", dataObj: new Date(2026,8,10,9,10) },
-{ protocolo: "SAC-260910-0040", registradoPor: "Fernanda", cliente: "João Souza", assunto: "Prazo de entrega", status: "Em andamento", dataObj: new Date(2026,8,10,8,40) },
-{ protocolo: "SAC-260909-0039", registradoPor: "Gabriel", cliente: "Ana Costa", assunto: "Troca/devolução", status: "Resolvido", dataObj: new Date(2026,8,9,17,5) }
+{ protocolo: "SAC-260910-0041", registradoPor: "Gabriel", nomeCliente: "Maria Oliveira", assunto: "Dúvida sobre produto", status: "Aberto", dataObj: new Date(2026,8,10,9,10) },
+{ protocolo: "SAC-260910-0040", registradoPor: "Fernanda", nomeCliente: "João Souza", assunto: "Prazo de entrega", status: "Em andamento", dataObj: new Date(2026,8,10,8,40) },
+{ protocolo: "SAC-260909-0039", registradoPor: "Gabriel", nomeCliente: "Ana Costa", assunto: "Troca/devolução", status: "Resolvido", dataObj: new Date(2026,8,9,17,5) }
 ],
 tempoMedioResolucaoHoras: 14.5
 };
@@ -353,12 +353,16 @@ const chamados = validas.map(r => {
 const status = r[IDX.STATUS] || "Aberto";
 const categoria = r[IDX.ASSUNTO] || "Sem assunto";
 const codigoCliente = (r[IDX.CODIGO_CLIENTE] || "").trim();
-const cliente = codigoCliente || normalizarNome(r[IDX.NOME_CLIENTE]) || normalizarNome(r[IDX.NOME]) || "Desconhecido";
+const nomeClienteTexto = normalizarNome(r[IDX.NOME_CLIENTE]);
 const registradoPor = normalizarNome(r[IDX.NOME]) || "Desconhecido";
+// chave usada só pra contar reincidência — prioriza o código, que não muda de grafia
+const clienteChave = codigoCliente || nomeClienteTexto || registradoPor || "Desconhecido";
+// nome mostrado nas tabelas — prioriza o Nome do cliente de verdade
+const nomeCliente = nomeClienteTexto || codigoCliente || "Desconhecido";
 
 porStatus[status] = (porStatus[status] || 0) + 1;
 porCategoria[categoria] = (porCategoria[categoria] || 0) + 1;
-porCliente[cliente] = (porCliente[cliente] || 0) + 1;
+porCliente[clienteChave] = (porCliente[clienteChave] || 0) + 1;
 porAtendente[registradoPor] = (porAtendente[registradoPor] || 0) + 1;
 
 const abertura = parseData(r[IDX.DATA]);
@@ -370,7 +374,7 @@ if (horas >= 0) temposResolucao.push(horas);
 
 return {
 protocolo: r[IDX.PROTOCOLO] || "—",
-registradoPor, cliente,
+registradoPor, nomeCliente,
 assunto: categoria, status,
 dataObj: abertura
 };
@@ -441,7 +445,7 @@ tbodyRecentes.innerHTML = recentes.length === 0
 : recentes.map(c => `
 <tr>
 <td class="mono">${c.protocolo}</td>
-<td>${c.cliente}</td>
+<td>${c.nomeCliente}</td>
 <td>${c.assunto}</td>
 <td><span class="dot" style="background:${STATUS_COLORS[c.status] || '#66727A'};"></span>${c.status}</td>
 </tr>`).join('');
@@ -482,7 +486,7 @@ tbodyTodos.innerHTML = lista.length === 0
 <tr>
 <td class="mono">${c.protocolo}</td>
 <td>${c.registradoPor || '—'}</td>
-<td>${c.cliente}</td>
+<td>${c.nomeCliente}</td>
 <td>${c.assunto}</td>
 <td><span class="dot" style="background:${STATUS_COLORS[c.status] || '#66727A'};"></span>${c.status}</td>
 <td class="mono">${c.dataObj ? c.dataObj.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
