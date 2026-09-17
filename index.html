@@ -181,6 +181,8 @@ padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer;
 </header>
 
 <div class="filterbar">
+<label for="filtro-nome">Aberto por</label>
+<select id="filtro-nome"><option value="todos">Todos</option></select>
 <label for="filtro-periodo">Período</label>
 <select id="filtro-periodo"><option value="todos">Todos os períodos</option></select>
 </div>
@@ -198,16 +200,10 @@ padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer;
 <div class="kpi"><div class="label">Clientes reincidentes (3+)</div><div class="value red" id="kpi-reincidentes">—</div></div>
 </div>
 
-<div class="grid">
-<div class="panel">
-<h2>Chamados por assunto <span>— o que mais gera dúvida</span></h2>
-<canvas id="chart-categoria"></canvas>
-</div>
-<div class="panel">
+<div class="panel" style="margin-bottom:24px;">
 <h2>Status atual <span>— distribuição</span></h2>
 <div class="status-bar" id="status-bar"></div>
 <div class="status-legend" id="status-legend"></div>
-</div>
 </div>
 
 <div class="panel" style="margin-bottom:24px;">
@@ -289,7 +285,7 @@ tempoMedioResolucaoHoras: 14.5
 // Carimbo de data/hora | Nome (quem abriu) | Código cliente | Nome do cliente | Descreva o assunto | Protocolo | Status | Responsável | Atualizado em | Resolvido em
 const IDX = { DATA: 0, NOME: 1, CODIGO_CLIENTE: 2, NOME_CLIENTE: 3, ASSUNTO: 4, PROTOCOLO: 5, STATUS: 6, RESPONSAVEL: 7, ATUALIZADO_EM: 8, RESOLVIDO_EM: 9 };
 
-let chartCategoria = null, chartAtendente = null;
+let chartAtendente = null;
 let linhasCruas = []; // todas as linhas válidas já lidas da planilha, sem filtro de período
 let modoExemplo = false;
 
@@ -302,6 +298,13 @@ return new Date(+y, +mo - 1, +d, +h, +mi, +s);
 }
 const d2 = new Date(str);
 return isNaN(d2) ? null : d2;
+}
+
+function normalizarNome(str){
+// "gabriel", "GABRIEL", "gAbriel" viram todos "Gabriel" — mesma pessoa, mesma chave.
+const limpo = (str || "").trim();
+if (!limpo) return "";
+return limpo.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 }
 
 function formatTempo(horas){
@@ -328,6 +331,19 @@ return `<option value="${ch}">${NOMES_MESES[+m-1]} de ${y}</option>`;
 }).join('');
 }
 
+function popularFiltroNome(linhas){
+const select = document.getElementById('filtro-nome');
+const nomes = new Set();
+linhas.forEach(r => {
+const nome = normalizarNome(r[IDX.NOME]);
+if (nome) nomes.add(nome);
+});
+const ordenados = Array.from(nomes).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+const atual = select.value;
+select.innerHTML = '<option value="todos">Todos</option>' + ordenados.map(n => `<option value="${n}">${n}</option>`).join('');
+if (ordenados.includes(atual)) select.value = atual;
+}
+
 function computarDados(linhas){
 const validas = linhas.filter(r => r[IDX.PROTOCOLO]);
 const porStatus = {}, porCategoria = {}, porCliente = {}, porAtendente = {};
@@ -336,8 +352,9 @@ const temposResolucao = [];
 const chamados = validas.map(r => {
 const status = r[IDX.STATUS] || "Aberto";
 const categoria = r[IDX.ASSUNTO] || "Sem assunto";
-const cliente = (r[IDX.CODIGO_CLIENTE] || r[IDX.NOME_CLIENTE] || r[IDX.NOME] || "Desconhecido").trim();
-const registradoPor = (r[IDX.NOME] || "Desconhecido").trim();
+const codigoCliente = (r[IDX.CODIGO_CLIENTE] || "").trim();
+const cliente = codigoCliente || normalizarNome(r[IDX.NOME_CLIENTE]) || normalizarNome(r[IDX.NOME]) || "Desconhecido";
+const registradoPor = normalizarNome(r[IDX.NOME]) || "Desconhecido";
 
 porStatus[status] = (porStatus[status] || 0) + 1;
 porCategoria[categoria] = (porCategoria[categoria] || 0) + 1;
@@ -374,9 +391,14 @@ return { totalChamados: validas.length, porStatus, porCategoria, porAtendente, r
 function aplicarFiltro(){
 if (modoExemplo) { renderResumo(DADOS_EXEMPLO); renderTodos(DADOS_EXEMPLO); return; }
 const periodo = document.getElementById('filtro-periodo').value;
-const linhasFiltradas = periodo === 'todos'
-? linhasCruas
-: linhasCruas.filter(r => chaveMes(parseData(r[IDX.DATA])) === periodo);
+const nomeSelecionado = document.getElementById('filtro-nome').value;
+let linhasFiltradas = linhasCruas;
+if (periodo !== 'todos') {
+linhasFiltradas = linhasFiltradas.filter(r => chaveMes(parseData(r[IDX.DATA])) === periodo);
+}
+if (nomeSelecionado !== 'todos') {
+linhasFiltradas = linhasFiltradas.filter(r => normalizarNome(r[IDX.NOME]) === nomeSelecionado);
+}
 const dados = computarDados(linhasFiltradas);
 renderResumo(dados);
 renderTodos(dados);
@@ -386,20 +408,6 @@ function renderResumo(dados){
 document.getElementById('kpi-total').textContent = dados.totalChamados ?? 0;
 document.getElementById('kpi-abertos').textContent = dados.porStatus?.["Aberto"] ?? 0;
 document.getElementById('kpi-reincidentes').textContent = (dados.reincidentes || []).length;
-
-const categorias = Object.entries(dados.porCategoria || {}).sort((a,b) => b[1]-a[1]);
-if (chartCategoria) chartCategoria.destroy();
-chartCategoria = new Chart(document.getElementById('chart-categoria'), {
-type: 'bar',
-data: { labels: categorias.map(c => c[0]), datasets: [{ data: categorias.map(c => c[1]), backgroundColor: '#1F4A5E', borderRadius: 1, maxBarThickness: 20 }] },
-options: {
-indexAxis: 'y', plugins: { legend: { display: false } },
-scales: {
-x: { ticks: { color: '#66727A', font: { size: 11 } }, grid: { color: '#E4E6E3' } },
-y: { ticks: { color: '#1E2A32', font: { size: 12 } }, grid: { display: false } }
-}
-}
-});
 
 const atendentes = Object.entries(dados.porAtendente || {}).sort((a,b) => b[1]-a[1]);
 if (chartAtendente) chartAtendente.destroy();
@@ -493,6 +501,7 @@ const parsed = Papa.parse(texto.trim(), { skipEmptyLines: true });
 linhasCruas = parsed.data.slice(1); // remove cabeçalho
 modoExemplo = false;
 popularFiltroPeriodo(linhasCruas);
+popularFiltroNome(linhasCruas);
 aplicarFiltro();
 pill.textContent = 'conectado';
 pill.classList.add('live');
@@ -507,6 +516,7 @@ console.error(err);
 }
 
 document.getElementById('filtro-periodo').addEventListener('change', aplicarFiltro);
+document.getElementById('filtro-nome').addEventListener('change', aplicarFiltro);
 document.querySelectorAll('.tab-btn').forEach(btn => {
 btn.addEventListener('click', () => {
 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
